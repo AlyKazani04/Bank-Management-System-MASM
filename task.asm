@@ -49,8 +49,6 @@ INCLUDE Irvine32.inc
     BalanceBufferOut   BYTE 20 DUP (?)     ; amount2
     BalanceSizeIn      DWORD ?             ; amountsize1
     CurrentBalanceInt  DWORD ?             ; amount (The integer value)
-    TempRemainder      DWORD ?             ; temp
-    
 
 .code
 
@@ -120,7 +118,7 @@ LoginRoutine:
     mov  edx, OFFSET InputUsername
     mov  ecx, SIZEOF InputUsername
     call ReadString
-    call Crlf
+    mov UserSizeIn, eax
     call Crlf
 
     ; Prompt for password
@@ -131,78 +129,34 @@ LoginRoutine:
     mov  edx, OFFSET InputPassword
     mov  ecx, SIZEOF InputPassword
     call ReadString
+    mov PassSizeIn, eax
 
     ; Open user file for input
     mov  edx, OFFSET FilenameUser
     call OpenInputFile
+    mov FileHandle, eax
+
     ; Read stored username
     mov  edx, OFFSET StoredUsername
     mov  ecx, LENGTHOF StoredUsername
     call ReadFromFile
 
+    mov eax, FileHandle
+    call CloseFile
+
     ; Open password file for input
     mov  edx, OFFSET FilenamePass
     call OpenInputFile
+    mov FileHandle, eax
+
     ; Read stored password
     mov  edx, OFFSET StoredPassword
     mov  ecx, LENGTHOF StoredPassword
     call ReadFromFile
+    mov PassSizeStore, eax
 
-    ; --- Calculate Length of InputUsername ---
-    mov  edx, OFFSET InputUsername
-    mov  ecx, LENGTHOF InputUsername
-    mov  esi, 0
-CalcLen_UserIn:
-    cmp  InputUsername[esi], 0
-    je   EndCalc_UserIn
-    inc  esi
-    loop CalcLen_UserIn
-EndCalc_UserIn:
-    mov  eax, LENGTHOF InputUsername
-    sub  eax, ecx
-    mov  UserSizeIn, eax
-
-    ; --- Calculate Length of StoredUsername ---
-    mov  edx, OFFSET StoredUsername
-    mov  ecx, LENGTHOF StoredUsername
-    mov  esi, 0
-CalcLen_UserStore:
-    cmp  StoredUsername[esi], 0
-    je   EndCalc_UserStore
-    inc  esi
-    loop CalcLen_UserStore
-EndCalc_UserStore:
-    mov  eax, LENGTHOF StoredUsername
-    sub  eax, ecx
-    mov  UserSizeStore, eax
-
-    ; --- Calculate Length of InputPassword ---
-    mov  edx, OFFSET InputPassword
-    mov  ecx, LENGTHOF InputPassword
-    mov  esi, 0
-CalcLen_PassIn:
-    cmp  InputPassword[esi], 0
-    je   EndCalc_PassIn
-    inc  esi
-    loop CalcLen_PassIn
-EndCalc_PassIn:
-    mov  eax, LENGTHOF InputPassword
-    sub  eax, ecx
-    mov  PassSizeIn, eax
-
-    ; --- Calculate Length of StoredPassword ---
-    mov  edx, OFFSET StoredPassword
-    mov  ecx, LENGTHOF StoredPassword
-    mov  esi, 0
-CalcLen_PassStore:
-    cmp  StoredPassword[esi], 0
-    je   EndCalc_PassStore
-    inc  esi
-    loop CalcLen_PassStore
-EndCalc_PassStore:
-    mov  eax, LENGTHOF StoredPassword
-    sub  eax, ecx
-    mov  PassSizeStore, eax
+    mov eax, FileHandle
+    call CloseFile
 
     ; --- Verify Credentials ---
     
@@ -237,10 +191,8 @@ Compare_Passwords:
 
 AuthFailed:
     call Crlf
-    call Crlf
     mov  edx, OFFSET ErrAuthFailed
     call WriteString
-    call Crlf
     call Crlf
     jmp  MainMenuLoop
 
@@ -258,6 +210,7 @@ NewUserRoutine:
     mov  edx, OFFSET InputUsername
     mov  ecx, SIZEOF InputUsername
     call ReadString
+    mov UserSizeIn, eax
     call Crlf
 
     ; Prompt for password
@@ -268,21 +221,28 @@ NewUserRoutine:
     mov  edx, OFFSET InputPassword
     mov  ecx, SIZEOF InputPassword
     call ReadString
+    mov PassSizeIn, eax
     call Crlf
 
     ; Save Username to file
     mov  edx, OFFSET FilenameUser
     call CreateOutputFile
+    mov FileHandle, eax
     mov  edx, OFFSET InputUsername
-    mov  ecx, LENGTHOF InputUsername
+    mov  ecx, UserSizeIn
     call WriteToFile
+    mov eax, FileHandle
+    call CloseFile
 
     ; Save Password to file
     mov  edx, OFFSET FilenamePass
     call CreateOutputFile
+    mov FileHandle, eax
     mov  edx, OFFSET InputPassword
-    mov  ecx, LENGTHOF InputPassword
+    mov  ecx, PassSizeIn
     call WriteToFile
+    mov eax, FileHandle
+    call CloseFile
 
     ; Confirm creation
     mov  edx, OFFSET MsgUserCreated
@@ -340,6 +300,9 @@ EndCalc_Balance:
     mov  esi, 0
     mov  ecx, BalanceSizeIn
 
+    cmp ecx, 0
+    je SaveInteger
+
 StrToInt_Loop:
     movzx ebx, BalanceBufferIn[esi]
     sub   ebx, '0'
@@ -350,17 +313,17 @@ StrToInt_Loop:
     loop  StrToInt_Loop
 
     ; Save integer balance
+SaveInteger:
     mov  CurrentBalanceInt, eax
 
     mov  edx, OFFSET PromptTransact
     call WriteString
     call Crlf
-    call Crlf
 
 TransactionLoop:
+    call Crlf
     mov  edx, OFFSET MsgTransaction
     call WriteString
-    call Crlf
     call Crlf
 
     call ReadDec
@@ -374,13 +337,13 @@ TransactionLoop:
     cmp  eax, 4
     je   ActionSaveAndQuit
 
-    ; -- Deposit Logic --
+    jmp TransactionLoop
+
+; -- Deposit Logic --
 ActionDeposit:
     call Crlf
     mov  edx, OFFSET PromptDeposit
     call WriteString
-    call Crlf
-    call Crlf
     call ReadDec
     add  CurrentBalanceInt, eax
     jmp  TransactionLoop
@@ -389,7 +352,6 @@ ActionDeposit:
 ErrInsufficientFunds:
     mov  edx, OFFSET ErrInsufficient
     call WriteString
-    call Crlf
     call Crlf
     jmp  TransactionLoop
 
@@ -437,65 +399,64 @@ ActionSaveAndQuit:
     mov  esi, 0
     mov  eax, CurrentBalanceInt
     
-    call Crlf
-    mov  edx, OFFSET EndingClause
-    call WriteString
-    call Crlf
+    cmp eax, 0
+    jne IntToStr_Start
 
+    mov BalanceBufferIn[0], '0'
+    mov BalanceSizeIn, 1
+    jmp WriteData
+
+IntToStr_Start:
 IntToStr_Loop:
     mov  edx, 0
     mov  ebx, 10
     div  ebx
-    add  edx, 0
-    mov  TempRemainder, edx
-    mov  dl, BYTE PTR TempRemainder
     add  dl, '0'
     mov  BalanceBufferIn[esi], dl
-    cmp  eax, 0
-    je   EndIntToStr
     inc  esi
-    loop IntToStr_Loop
 
-EndIntToStr:
-    ; Find string end
-    mov  esi, 0
-    mov  ecx, LENGTHOF BalanceBufferIn
+    cmp eax, 0
+    jne IntToStr_Loop
 
-CalcLen_FinalStr:
-    mov  al, BalanceBufferIn[esi]
-    cmp  al, 0
-    je   EndCalc_FinalStr
-    inc  esi
-    loop CalcLen_FinalStr
+    mov BalanceSizeIn, esi
 
-EndCalc_FinalStr:
-    mov  eax, LENGTHOF BalanceBufferIn
-    sub  eax, ecx
-    mov  BalanceSizeIn, eax
-
-    ; Reverse the string (because conversion happened backwards)
-    mov  esi, 0
-    mov  ecx, BalanceSizeIn
-    mov  edx, BalanceSizeIn
-    sub  edx, 1
+    ; Reverse the string
+    mov ecx, BalanceSizeIn
+    mov esi, 0
+    mov edi, BalanceSizeIn
+    dec edi
 
 ReverseStringLoop:
     mov  al, BalanceBufferIn[esi]
-    mov  BalanceBufferOut[edx], al
+    mov  BalanceBufferOut[edi], al
     inc  esi
-    dec  edx
+    dec  edi
     loop ReverseStringLoop
 
     ; Write updated balance to file
+WriteData:
+    call Crlf
+    mov edx, OFFSET EndingClause
+    call WriteString
+    call Crlf
+
     mov  edx, OFFSET FilenameMoney
     call CreateOutputFile
     mov  FileHandle, eax
+
     mov  edx, OFFSET BalanceBufferOut
-    mov  ecx, LENGTHOF BalanceBufferOut
+
+    cmp CurrenBalanceInt, 0
+    jne DoWrite
+    mov edx, OFFSET BalanceBufferIn
+
+DoWrite:
+    mov ecx, BalanceSizeIn
     call WriteToFile
+
+    mov eax, FileHandle
     call CloseFile
 
     exit
-
 main ENDP
 END main
