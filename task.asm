@@ -446,7 +446,7 @@ WriteData:
 
     mov  edx, OFFSET BalanceBufferOut
 
-    cmp CurrenBalanceInt, 0
+    cmp CurrentBalanceInt, 0
     jne DoWrite
     mov edx, OFFSET BalanceBufferIn
 
@@ -460,3 +460,4 @@ DoWrite:
     exit
 main ENDP
 END main
+
