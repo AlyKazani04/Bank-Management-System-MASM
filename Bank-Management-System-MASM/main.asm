@@ -132,12 +132,10 @@ Done:
     ret
 PadString ENDP
 
-; ---------------------------------------------------------
 ; Procedure: ParsePaddedInt
 ; Reads a space-padded string from buffer and converts to Int
 ; Input: ESI = Pointer to start of number in FileBuffer
 ; Output: EAX = Integer value
-; ---------------------------------------------------------
 ParsePaddedInt PROC USES ecx edx esi edi
     ; Copy valid digits to TempString
     mov  edi, OFFSET TempString
@@ -177,9 +175,7 @@ FinishedConvert:
     ret
 ParsePaddedInt ENDP
 
-; =========================================================
 ; MAIN PROGRAM
-; =========================================================
 main PROC
     mov  eax, cyan + (black * 16)
     call SetTextColor
@@ -219,9 +215,7 @@ ExitProgram:
     call WriteString
     exit
 
-; ---------------------------------------------------------
 ; Login Routine
-; ---------------------------------------------------------
 LoginRoutine:
     call Crlf
     ; Get Username
@@ -252,10 +246,7 @@ ScanLoop:
     push ecx              ; Save counter
 
     ; Compare Username (First 20 bytes of record)
-    ; We compare against InputUsername. Note: Input has null term, Buffer has spaces.
-    ; We'll construct a padded temp username to compare exactly.
-    
-    ; Actually simpler: Check if Buffer starts with InputUsername string
+    ; Check if Buffer starts with InputUsername string
     mov  edi, OFFSET InputUsername
     mov  ebx, esi         ; EBX = Record Start
     
@@ -275,7 +266,7 @@ CheckPad:
     cmp  al, ' '
     jne  NextRecord
 
-    ; --- User Matched, Check Password (Offset 20) ---
+    ; User Matched, Check Password (Offset 20)
     pop  ecx
     pop  esi
     push esi
@@ -300,7 +291,7 @@ CheckPassPad:
     cmp  al, ' '
     jne  NextRecord
     
-    ; --- Match Found! ---
+    ; Match Found
     pop  ecx
     pop  esi      ; ESI is the start of the record
     mov  CurrentRecordPtr, esi
@@ -326,9 +317,7 @@ UserNotFound:
     call Crlf
     jmp  MainMenuLoop
 
-; ---------------------------------------------------------
 ; New User Routine
-; ---------------------------------------------------------
 NewUserRoutine:
     call Crlf
     ; Get Data
@@ -338,7 +327,7 @@ NewUserRoutine:
     mov  ecx, 15
     call ReadString
     
-    ; Check duplicates (Simplified: Just scan username)
+    ; Check duplicates (Just scan username)
     mov  esi, OFFSET FileBuffer
     mov  ecx, TotalBytes
     
@@ -396,7 +385,7 @@ CreateUser:
     mov  ecx, 15
     call ReadString
     
-    ; --- Append to Memory Buffer ---
+    ; Append to Memory Buffer
     mov  edi, OFFSET FileBuffer
     add  edi, TotalBytes      ; Point to end of data
     
@@ -443,15 +432,12 @@ CreateUser:
     sub  eax, REC_SIZE
     mov  CurrentRecordPtr, eax
     
-    ; Parse the balance we just entered (to get int value)
+    ; Parse the balance (to get int value)
     mov  esi, OFFSET InputBalance
-    ; We can't use ParsePaddedInt on InputBalance directly as it's not space padded yet
-    ; Helper: just ASCII to int simple
-    mov  edx, OFFSET InputBalance
-    call ParseStringToInt   ; (Uses Irvine ParseDecimal32 logic roughly)
     
-    ; Actually, simpler: Just read Dec above? No, we want string storage.
-    ; Let's just restart main menu for simplicity
+    mov  edx, OFFSET InputBalance
+    call ParseStringToInt
+    
     jmp  MainMenuLoop
 
 ParseStringToInt:
@@ -471,9 +457,7 @@ Pdone:
     mov CurrentBalanceInt, ecx
     ret
 
-; ---------------------------------------------------------
 ; Banking Operations
-; ---------------------------------------------------------
 TransactionLoop:
     call Crlf
     mov  edx, OFFSET LblCustomer
@@ -544,10 +528,8 @@ ActionShowBalance:
 ActionLogout:
     jmp MainMenuLoop
 
-; ---------------------------------------------------------
 ; Helper: UpdateBalanceRecord
 ; Converts CurrentBalanceInt to string and updates FileBuffer
-; ---------------------------------------------------------
 UpdateBalanceRecord PROC
     ; 1. Convert Int to String in TempString
     mov  eax, CurrentBalanceInt
