@@ -16,22 +16,22 @@ This is a Bank Management System using Assembly Language (EMU8086 with MASM). Th
 - Display customer details
 - Save, updates balance to file
 
-## Screenshots / Demo
+## Screenshots
 
 ### Menu
-![Menu](demo/menu.png)
+![Menu](Bank-Management-System-MASM/demo/menu.png)
 ---
 ### New User
-![New User](demo/newuser.png)
+![New User](Bank-Management-System-MASM/demo/newuser.png)
 ---
 ### Existing User
-![Existing User](demo/existinguser.png)
+![Existing User](Bank-Management-System-MASM/demo/existinguser.png)
 ---
 ### Deposit, Withdraw, Show Operations
-![Deposit, Withdraw, Show Operations](demo/deposit,WithdrawandShow.png)
+![Deposit, Withdraw, Show Operations](Bank-Management-System-MASM/demo/deposit,WithdrawandShow.png)
 ---
 ### Exit
-![Exit](demo/exit.png)
+![Exit](Bank-Management-System-MASM/demo/exit.png)
 ---
 
 - ### Requirements
