@@ -16,7 +16,7 @@ This is a Bank Management System using Assembly Language (EMU8086 with MASM). Th
 - Display customer details
 - Save, updates balance to file
 
-## Screenshots
+## Screenshots / Demo
 
 ### Menu
 ![Menu](demo/menu.png)
