@@ -3,8 +3,8 @@
 ## Table of Contents
 - [Overview](#overview)
 - [Functions](#functions)
-- [Screenshots](#screenshots--demo)
-- [Installation](#installation)
+- [Screenshots](#screenshots)
+- [Requirements](#requirements)
 - [Contributors](#contributors)
 
 ## Overview
@@ -34,7 +34,7 @@ This is a Bank Management System using Assembly Language (EMU8086 with MASM). Th
 ![Exit](Bank-Management-System-MASM/demo/exit.png)
 ---
 
-- ### Requirements
+## Requirements
     - MASM
     - EMU 8086
     - Irvine32 library
