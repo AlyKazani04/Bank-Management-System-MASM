@@ -35,7 +35,7 @@ INCLUDE Irvine32.inc
     FileHandle         DWORD ?
     
     ; We use a large buffer to hold the entire file in memory
-    ; Record Format: User(20) + Pass(20) + Balance(20) + CRLF(2) = 62 bytes (approx 64 for alignment)
+    ; Record Format: User(20) + Pass(20) + Balance(20) + CRLF(2) = 62 bytes
     REC_SIZE           EQU 62
     NAME_SIZE          EQU 20
     PASS_SIZE          EQU 20
